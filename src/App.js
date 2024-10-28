@@ -1,25 +1,47 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from "react";
+import { Provider, useDispatch } from "react-redux";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import store from "./store/store";
+import TodoScreen from "./screens/TodoScreen";
+import LoginScreen from "./screens/LoginScreen";
+import { loadAuthStatus } from "./store/authSlice";
+import localforage from "localforage";
+import "./app.css";
 
-function App() {
+function AppContent() {
+  const dispatch = useDispatch();
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      const storedStatus = await localforage.getItem("isAuthenticated");
+      if (storedStatus) {
+        dispatch(loadAuthStatus());
+      }
+      setIsLoading(false);
+    };
+
+    checkAuthStatus();
+  }, [dispatch]);
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Routes>
+      <Route path="/todo" element={<TodoScreen />} />
+      <Route path="/" element={<LoginScreen />} />
+    </Routes>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <Provider store={store}>
+      <Router>
+        <AppContent />
+      </Router>
+    </Provider>
+  );
+}
